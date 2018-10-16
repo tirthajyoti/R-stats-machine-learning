@@ -1,8 +1,10 @@
 # Statistics and Machine Learning R scripts 
 Misc Machine Learning and statistical analysis tasks in R
 
-## Supervised learning
+## Supervised learning (regression and Classification)
 * Linear regression
+* Stepwise selection method 
+* LASSO, Ridge, and Elastic Net regularization methods
 * Residual analysis
 * Spline regression
 * Logistic regression
