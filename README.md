@@ -12,7 +12,7 @@ Misc Machine Learning and statistical analysis code examples in R
 * [factoextra](http://www.sthda.com/english/wiki/factoextra-r-package-easy-multivariate-data-analyses-and-elegant-visualization)
 * ... and some more...
 
-## Supervised learning (regression and Classification)
+## Supervised learning (Regression and Classification)
 * Linear regression
 <img src="https://slideplayer.com/slide/6053182/20/images/10/Simple+Linear+Regression+Model.jpg" width="400" height="300"/>
 * Stepwise selection method 
