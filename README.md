@@ -1,5 +1,16 @@
 # Statistics and Machine Learning R scripts 
-Misc Machine Learning and statistical analysis tasks in R
+Misc Machine Learning and statistical analysis code examples in R
+
+## Packages used/demonstrated
+* [caret](caret.r-forge.r-project.org)
+* [rattle](https://cran.r-project.org/web/packages/rattle/vignettes/rattle.pdf)
+* [randomForest](https://cran.r-project.org/web/packages/randomForest/randomForest.pdf)
+* [rpart](https://cran.r-project.org/web/packages/rpart/rpart.pdf)
+* [dplyr](https://cran.r-project.org/web/packages/dplyr/dplyr.pdf)
+* [ggplot2](https://cran.r-project.org/package=ggplot2/ggplot2.pdf)
+* [corrplot](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html)
+* [factoextra](http://www.sthda.com/english/wiki/factoextra-r-package-easy-multivariate-data-analyses-and-elegant-visualization)
+* ... and some more...
 
 ## Supervised learning (regression and Classification)
 * Linear regression
