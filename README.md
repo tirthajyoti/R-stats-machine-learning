@@ -3,8 +3,14 @@ Misc Machine Learning and statistical analysis tasks in R
 
 ## Supervised learning (regression and Classification)
 * Linear regression
+
+<img src="https://slideplayer.com/slide/6053182/20/images/10/Simple+Linear+Regression+Model.jpg" width="300" height="250"/>
+
 * Stepwise selection method 
 * LASSO, Ridge, and Elastic Net regularization methods
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/L1_and_L2_balls.svg/300px-L1_and_L2_balls.svg.png"/>
+
 * Residual analysis
 * Spline regression
 * Logistic regression
