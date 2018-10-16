@@ -10,6 +10,8 @@ Misc Machine Learning and statistical analysis code examples in R
 * [ggplot2](https://cran.r-project.org/package=ggplot2/ggplot2.pdf)
 * [corrplot](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html)
 * [factoextra](http://www.sthda.com/english/wiki/factoextra-r-package-easy-multivariate-data-analyses-and-elegant-visualization)
+* [glmnet](https://cran.r-project.org/web/packages/glmnet/glmnet.pdf)
+* [MASS](https://cran.r-project.org/web/packages/MASS/MASS.pdf)
 * ... and some more...
 
 ## Supervised learning (Regression and Classification)
