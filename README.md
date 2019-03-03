@@ -1,3 +1,5 @@
+## Please feel free to [add me here on LinkedIn](https://www.linkedin.com/in/tirthajyoti-sarkar-2127aa7/) if you are interested in data science and like to connect.
+
 # Statistics and Machine Learning R scripts 
 Misc Machine Learning and statistical analysis code examples in R
 
