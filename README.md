@@ -14,10 +14,12 @@ Misc Machine Learning and statistical analysis code examples in R
 * [factoextra](http://www.sthda.com/english/wiki/factoextra-r-package-easy-multivariate-data-analyses-and-elegant-visualization)
 * [glmnet](https://cran.r-project.org/web/packages/glmnet/glmnet.pdf)
 * [MASS](https://cran.r-project.org/web/packages/MASS/MASS.pdf)
+* [mgcv](https://cran.r-project.org/web/packages/mgcv/index.html)
 * ... and some more...
 
 ## Supervised learning (Regression and Classification)
 * Linear regression
+* Poisson regression
 <img src="https://slideplayer.com/slide/6053182/20/images/10/Simple+Linear+Regression+Model.jpg" width="400" height="300"/>
 * Stepwise selection method 
 * LASSO, Ridge, and Elastic Net regularization methods
