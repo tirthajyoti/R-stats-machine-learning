@@ -1,5 +1,5 @@
 ---
-title: "HW3_Peer_Assesment"
+title: "Galapagos Island Data Analysis"
 author: "Tirtha Sarkar"
 date: "July 2nd, 2019"
 output: html_document
