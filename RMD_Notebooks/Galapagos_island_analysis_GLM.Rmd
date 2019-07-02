@@ -1,0 +1,400 @@
+---
+title: "HW3_Peer_Assesment"
+author: "Tirtha Sarkar"
+date: "July 2nd, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+For 30 Galapagos Islands, the data consist of the number of plant species found on each island and the number that are endemic to that island. We also have five geographic variables for each island. The data was presented by Johnson and Raven (1973) and also appear in Weisberg (2005).
+
+## Data Description
+
+While the dataset contains seven variables, we are interested only in  the following six:
+
+* **Species**: the number of plant species found on the island
+* **Area**: the area of the island (km^2)
+* **Elevation**: the highest elevation of the island (m)
+* **Nearest**: the distance from the nearest island (km)
+* **Scruz**: the distance from Santa Cruz island (km)
+* **Adjacent**: the area of the adjacent island (km^2)
+
+## Read and pre-process the data
+
+Install the package faraway, load the dataset gala, and drop the unnecessary second column that is Endemics:
+
+```{r}
+require(faraway)
+data(gala)
+mydata <- gala
+mydata <- mydata[-2]
+```
+
+### Test if the data was read properly
+
+```{r}
+head(mydata)
+```
+
+## Question 1: Fitting the Model
+
+Fit a poisson regression model using the number of species as the response variable and all other variables as predictors. Call it **model1**.
+
+### (a) Display the summary of model1. What are the model parameters and estimates?
+
+The code,
+
+```{r}
+model1 <- glm(Species ~ .,data=mydata,family="poisson")
+```
+
+Summary of the model,
+
+```{r}
+summary(model1)
+```
+
+The model parameters are,
+
+* Intercept, estimate: 3.15 (statistically significant) 
+* Area, estimate: -5.799e-4 (statistically significant)
+* Elevation, estimate: 3.541e-3 (statistically significant)
+* Nearest, estimate 8.826e-3 (statistically significant)
+* Scruz, estimate -5.709e-3 (statistically significant)
+* Adjacent, estimate -6.63e-4 (statistically significant)
+
+### (b) Write down the equation for the estimated number of species given the predicting variables.
+
+The equation for estimated number of plan species is:
+
+`E[*Number_of_plant_species*] = exp(3.155-5.799e-4x*Area* + 3.541e-3x*Elevation*
+ + 8.826e-3x*Nearest*  -5.709e-3x*Scruz* - 6.63e-4x*Adjacent*)`
+
+### (c) Provide meaningful interpretations for the coefficients of Elevation and Scruz.
+
+The interpretation are as follows,
+
+For one unit increase in the elevation (meter), the ratio of the expected number of plat species increases to exp(3.541e-3) ~ 1.00354. As an example, if the expected number of plant species was 1000 earlier, now it becomes 1.00354 x 1000 = 1003.54 i.e. approximately 4 more plant species can be expected to be found (rounding 1003.54 to 1004).
+
+For one unit increase in the distance from the Santa Cruz island (km), the ratio of the expected number of plat species increases to exp(-5.709e-3) ~ 0.994. As an example, if the expected number of plant species was 1000 earlier, now it becomes 0.994 x 1000 = 994 i.e. approximately 6 less plant species can be expected to be found.
+
+## Question 2: Inference
+
+### (a) Using model1, find a 90% confidence interval for the coefficient for Nearest.
+
+The code to find the 90% confidence interval for the parameter `Nearest` is,
+
+```{r}
+confint(model1,c('Nearest'),level=0.9)
+```
+So, the estimate of the parameter `Nearest` lies between 0.0058 and 0.0118 with a 90% confidence.
+
+### (b) Is model1 significant overall? How do you come to your conclusion?
+
+To answer the overall significance of the model, we need to **subtract the Residual Deviance from the Null deviance** from the model summary. Then, we can do a chi-square test to compute the p-value and comment on the significance. The code to is,
+
+```{r}
+diff.dev <- model1$null.deviance - model1$deviance
+p.val <- 1-pchisq(diff.dev,5)
+cat("P-value of overall regression:",p.val)
+```
+
+As the P-value is close to zero, we can say that the model has overall significance i.e. **it cannot be an intercept-only model and at least some parameters have statistical significance**.
+
+### (c) Which variables are significantly nonzero at the 0.01 significance level? Which are significantly positive? Why?
+
+We compute the table of confidence interval at 0.01 significance level to answer this question,
+
+```{r}
+confint(model1,level=0.99)
+```
+
+In fact, **all the variables are significantly non-zero** at 0.01 significance level. 
+
+**`Elevation`, and `Nearest` are significantly positive**. Their one unit increase will increase the expected number of plat species because the ratio will be exponential to a positive number i.e. greater than 1.
+
+## Question 3: Goodness of fit
+
+### (a) Perform goodness of fit hypothesis tests using both deviance and Pearson residuals. What do you conclude? Explain the differences, if any, between these findings and what you found in Question 2b.
+
+We can perform GOF test using deviance residuals as follows,
+
+```{r}
+deviances <- residuals(model1,type="deviance")
+dev.tvalue = sum(deviances^2)
+c(dev.tvalue, 1-pchisq(dev.tvalue,5))
+```
+
+We can perform GOF test using Pearson residuals as follows,
+```{r}
+pearres <- residuals(model1,type="pearson")
+pearson.tvalue = sum(pearres^2)
+c(pearson.tvalue, 1-pchisq(pearson.tvalue,5))
+```
+
+Interestingly, both deviance and Pearson residual test show low P-value. This means we should reject the Null hypothesis that the model has a good fit. So, this somewhat contradicts the Question 2b conclusion that the model has overall statistical significance.
+
+### (b) Perform visual analytics for checking goodness of fit for this model and write your observations. Be sure to address the model assumptions. Only deviance residuals are required for this question.
+
+Following code extracts and plots deviance residuals for the model.
+```{r}
+res = resid(model1,type="deviance")
+par(mfrow=c(2,3))
+plot(mydata$Area,res,ylab="Std residuals",xlab="Area")
+abline(0,0,col="blue",lwd=2)
+plot(mydata$Elevation,res,ylab="Std residuals",xlab="Elevation")
+abline(0,0,col="blue",lwd=2)
+plot(mydata$Nearest,res,ylab="Std residuals",xlab="Nearest")
+abline(0,0,col="blue",lwd=2)
+plot(mydata$Scruz,res,ylab="Std residuals",xlab="Scruz")
+abline(0,0,col="blue",lwd=2)
+plot(mydata$Adjacent,res,ylab="Std residuals",xlab="Adjacent")
+abline(0,0,col="blue",lwd=2)
+```
+
+Histogram and the Q-Q plot.
+
+```{r}
+res = resid(model1,type="deviance")
+par(mfrow=c(1,3))
+plot(fitted(model1), res, xlab = "Fitted Values", ylab = "Std. Residuals", pch = 19)
+abline(h = 0, col="blue",lwd=2)
+qqnorm(res, ylab="Std residuals")
+qqline(res,col="blue",lwd=2)
+hist(res,10,xlab="Std residuals", main="",col="orange")
+```
+
+### (c) Calculate the dispersion parameter for this model. Is this an overdispersed model?
+
+The dispersion is given by,
+$$\hat\phi = \frac{D}{n-p-1} $$
+where $D$ is the sum of the squared deviances, $n$ = number of samples, $p$ = number of parameters.
+
+So, the dispersion for this model is,
+
+```{r}
+deviance(model1)/(dim(mydata)[1]-length(model1$coefficients)-1)
+```
+
+**This is clearly an overdispersed model and if it is not accounted for, then the statistical inference will be impacted.**
+
+## Question 4: Fitting a Count per Area Model
+
+Let's create a rate based poisson regression model for the same dataset. Now the response will be density of species (number of species/km^2). So the exposure in this case will be Area. Call this **model2**. Fit the model and display the summary of the model.
+
+The code for this model will be as follows,
+
+```{r}
+model2 <- glm(Species ~ Elevation+Nearest+Scruz+Adjacent+offset(log(Area)), 
+              family="poisson",data=mydata)
+summary(model2)
+```
+
+### (a) Write down the equation for the estimated number of species per square kilometer given the predicting variables.
+
+The equation for estimated number of plan species, as per **`model2`** is:
+
+`E[*Number_of_plant_species*] = exp(2.155-2.966e-3x*Elevation*
+ - 1.674e-2x*Nearest* - 1.078e-3x*Scruz* + 1.568e-4x*Adjacent*)`
+ 
+### (b) Provide a meaningful interpretation for the coefficient of `Adjacent`.
+
+The interpretation is as follows,
+
+For one unit increase in the `Adjacent` i.e. area of the adjacent island (km^2), the ratio of the expected number of plat species increases to exp(1.568e-4) ~ 1.000157. As an example, if the expected number of plant species was 1000 earlier, now it becomes 1.000157 x 1000 = 1000.157. It is an extremely small change, almost negligible in my view.
+
+### (c) Is information about the nearby island significant given the other variables? Compare **`model2`** with a model containing only `Elevation` and `Scruz`.
+
+The estimate of the coefficient `Nearest` has statistical significance because its z-score is -10.78 and corresponding p-value close to zero. So, the **information about the nearby island is statistically significant given other variables**.
+
+We construct another model, called **model2.reduced**, containing only `Elevation` and `Scruz`. We show its summary.
+
+```{r}
+model2.reduced <- glm(Species ~ Elevation+Scruz+offset(log(Area)), 
+              family="poisson",data=mydata)
+summary(model2.reduced)
+```
+
+### (d) Has your goodness of fit been affected? Repeat the tests, plots, and dispersion parameter calculation you performed in Question 3 with **`model2`**.
+
+We can perform GOF test using deviance residuals as follows,
+
+```{r}
+deviances <- residuals(model2,type="deviance")
+dev.tvalue = sum(deviances^2)
+c(dev.tvalue, 1-pchisq(dev.tvalue,4))
+```
+
+We can perform GOF test using Pearson residuals as follows,
+```{r}
+pearres <- residuals(model2,type="pearson")
+pearson.tvalue = sum(pearres^2)
+c(pearson.tvalue, 1-pchisq(pearson.tvalue,4))
+```
+
+Interestingly, both deviance and Pearson residual test show low P-value. This means **we should reject the Null hypothesis that the model has a good fit. So, this somewhat contradicts the Question 2b conclusion that the model has overall statistical significance.**
+
+Following code extracts and plots deviance residuals for the model.
+```{r}
+res = resid(model2,type="deviance")
+par(mfrow=c(2,2))
+plot(mydata$Elevation,res,ylab="Std residuals",xlab="Elevation")
+abline(0,0,col="blue",lwd=2)
+plot(mydata$Nearest,res,ylab="Std residuals",xlab="Nearest")
+abline(0,0,col="blue",lwd=2)
+plot(mydata$Scruz,res,ylab="Std residuals",xlab="Scruz")
+abline(0,0,col="blue",lwd=2)
+plot(mydata$Adjacent,res,ylab="Std residuals",xlab="Adjacent")
+abline(0,0,col="blue",lwd=2)
+```
+
+Histogram and the Q-Q plot.
+
+```{r}
+res = resid(model2,type="deviance")
+par(mfrow=c(1,3))
+plot(fitted(model2), res, xlab = "Fitted Values", ylab = "Std. Residuals", pch = 19)
+abline(h = 0, col="blue",lwd=2)
+qqnorm(res, ylab="Std residuals")
+qqline(res,col="blue",lwd=2)
+hist(res,10,xlab="Std residuals", main="",col="orange")
+```
+
+The Goodness-of-Fot has been affected slighly. I observe less clsuters for the residual vs. predictors plots. The QQ-plot and histogram shows slightly more normality although one-sided skewness remains.
+
+The dispersion can be computed as follows,
+
+```{r}
+deviance(model2)/(dim(mydata)[1]-length(model2$coefficients)-1)
+```
+
+**Again, this is an overdispersed model.**
+
+### (e) Overall, would you say **`model2`** is a good-fitting model? If so, why? If not, what would you suggest to improve the fit and why? Note, we are not asking you to spend hours finding the best possible model but to offer plausible suggestions along with your reasoning.
+
+First question,
+
+#### Is **`model2`** a good model?
+
+```{r}
+with(model1, cbind(res.deviance = deviance, df = df.residual,
+               p = pchisq(deviance, df.residual, lower.tail=FALSE)))
+```
+
+```{r}
+with(model2, cbind(res.deviance = deviance, df = df.residual,
+               p = pchisq(deviance, df.residual, lower.tail=FALSE)))
+```
+
+The devianace residual test shows no apparent difference between the two models i.e. both p-values are extremely small, **so model2 does not improve the GOF in my opinion**.
+
+#### Possible suggestions to improve the GOF
+
+* It is clear from the residuals vs. predictors plots that there are **outliers in the data**, which are impacting the coefficients of the model. It may be useful to remove them. 
+
+* Histogram shows skewedness, so, we can try some well-known transformations to better fit the model.
+
+* We cansider **interaction terms in the predictors** for example area and distance of the nearest island may have some interaction.
+
+* We can also try to fit **non-parametric transformation** of the predicting variables using libraries such as **`mgcv`** and using **Generalized Additive Models (GAM)**.
+
+For example, if we try and combine multiple non-parametric transformations on `Elevation`, `Nearest`, and `Adjacent`,
+
+```{r}
+library(mgcv)
+m2 <- gam(Species ~ Area+s(Elevation)+s(Nearest)+s(Adjacent)+Scruz,family="poisson",data=mydata)
+with(m2, cbind(res.deviance = deviance, df = df.residual,
+               p = pchisq(deviance, df.residual, lower.tail=FALSE)))
+```
+
+We can see that the **deviance residual has been reduced by a significant amount compared to `model1` or `model2`.**
+
+## Question 5: Prediction
+
+Suppose you've found a new island 110 km from Santa Cruz with an area of 25 km^2 and an elevation of 100 m. Its nearest island is 21.1 km away with an area of 0.57 km^2.
+
+### (a) Predict the number of plant species on this new island using **`model1`**.
+
+Let's get the new data point read in properly,
+
+```{r}
+newdata <- data.frame(Area=25,Elevation=100,Nearest=21.1,Scruz=110,Adjacent=0.57)
+```
+
+Then we can use the `predict.glm` function to predict the expected number of plant species on this newly discovered island. Note, we have to take the exponent of the output of `predict.glm` to get the actual answer.
+
+```{r}
+newdata.species <- exp(predict.glm(model1,newdata))
+cat("Expected number of plan species on the new island using model1: ",newdata.species)
+```
+
+### (b) Predict the number of plant species using **`model2`**.
+
+Following the exact same process as above,
+
+```{r}
+newdata.2 <- data.frame(Area=25,Elevation=100,Nearest=21.1,Scruz=110,Adjacent=0.57)
+newdata.species.2 <- exp(predict.glm(model2,newdata.2))
+cat("Expected number of plan species on the new island using model2: ",newdata.species.2)
+```
+
+### (c) Comment on how your predictions compare.
+
+The **predictions using two models are widely different**. This is probably expected as we say that neigher of them demonstrated goodness-of-fit. Some transformation or outlier removal is needed to improve the models.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
