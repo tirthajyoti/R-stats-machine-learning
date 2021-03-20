@@ -1,0 +1,227 @@
+---
+title: "ISYE7406_HW5"
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+### GTID: tsarkar31
+
+## Introduction
+
+The goal of this homework is to investigate the decision tree algorithm with its numerous variants and options by applying it to a particular dataset called the *Orange Juice (OJ)* dataset. **[Here are some details about the dataset](https://rdrr.io/cran/ISLR/man/OJ.html)**.
+
+
+### How does the dataset look like?
+
+The dataset contains 1070 purchase samples, where the customer purchased either Citrus Hill or Minute Maid orange juice product. This is the binary response variable. It contains a number of characteristics of the customer and product as the predictor variables.
+
+- Week of purchase
+- Store ID
+- Price
+- Discount
+- Customer brand loyalty
+- Sales price, etc.,
+
+### Tasks
+
+We will perform the following set of tasks in this HW,
+
+- Test and training set formation
+- Fitting a classification tree
+- Plotting the tree and interpretation of the result
+- Prediction on the test set, computing the confusion matrix
+- Determining the optimal tree size using the training set
+- Producing a pruned tree corresponding to the optimal size
+- Comparing the pruned and the unpruned trees
+
+## (a) Data acquision and EDA
+
+We read the data using the `read.table` command.
+
+```{r}
+# Read
+OJ <- read.table("OJ.csv",sep = ',', header = T)
+```
+
+Next, we choose **800 random samples** to construct the training set (with a seed 7406) and the rest is put into the test set.
+
+```{r}
+# Test/train
+n = dim(OJ)[1]
+n1 = 800
+set.seed(7406)
+flag = sort(sample(1:n, n1))
+
+OJ.train <- OJ[flag,]
+OJ.test <- OJ[-flag,]
+```
+
+Here are the dimensions,
+
+```{r}
+cat("Dimension of the train set: ",dim(OJ.train))
+cat("\nDimension of the test set: ",dim(OJ.test))
+```
+## (b) Fitting the classification tree
+
+Next, we fit the classification tree with the `rpart` function from the `rpart` library with the `Purchase` as the response variable and **using `gini` criterion for splitting**.
+
+```{r}
+library(rpart)
+tree1 <- rpart(Purchase~., data=OJ.train, 
+               method="class", parms=list(split="gini"))
+```
+
+### Summary lessons from the tree
+
+The summary of the model shows us,
+
+- The variables of importance are `LoyalCH` > `PriceDiff` > `ListPriceDiff` > `SalePriceMM` > `PriceMM` > `PctDiscMM` > `DiscMM` > `PriceCH` > `SalePriceCH` > `WeekofPurchase` > `StoreID` > `DiscCH` > `STORE`
+
+- This ordering of variable (by importance) shows us that **customer brand loyalty is very important for the Citrus Hill sales**
+
+- **Listing price difference** is also critical
+
+- Sales and discount pricing on Minute Maid are more important factors than the same quantities w.r.t Citrus Hill. **Perhaps, Citrus Hill had a stronger fan following** and pricing mattered less for its sale. But **strategic pricing on Minute Maid could perhaps lure away some customers who are highly price sensitive**.
+
+- Week of the purchase, store ID (therefore location), store identity, etc. mattered very little in the purchasing decision. **Management should spend less time and effort on those strategies**.
+
+### Training error rate and terminal nodes
+
+We calculate the training error for this fitted model using the `predict` function and comparing the results to the actual ground truth data.
+
+```{r}
+# Train error
+y1hatc <- predict(tree1, OJ.train[,-1],type="class")
+train.error <- sum(y1hatc!=as.factor(OJ.train[,1]))/length(OJ.train[,1])
+```
+
+The training error comes out to be: **0.155 or 15.5%.**
+
+We plot the tree using the `prp` function from the `rpart.plot` library,
+
+```{r,fig.height=4}
+library(rpart.plot)
+prp(tree1)
+```
+
+Looking at the tree we count **7 terminal nodes i.e. nodes with no children of their own**
+
+## (c) Plot of the tree
+
+We show the plot above. The interpretations are as follows,
+
+- **`LoyaltyCH` has an inflection point** at 0.76. Anything above that is sure to result in a CH purchase. 
+
+- Between 0.76 and 0.48, the **`ListPriceDiff` factor matters** and if that is higher than 0.24, it pushes the sales to CH.
+
+- Ultimately, it can come down to the factor of `PriceDiff` but a **small difference of 0.015 can push the sale either way**.
+
+- The customers who are less loyal to the CH brand, can only be swayed with a large price difference. **This is expected customer behavioral psychology.**
+
+## (d) Response on the Test data
+
+We compute the response on the test data using the same `predict` function.
+
+```{r}
+# Test error
+y2hatc <- predict(tree1, OJ.test[,-1],type="class")
+test.error <- sum(y2hatc!=as.factor(OJ.test[,1]))/length(OJ.test[,1])
+```
+
+The test error rate turns out to be: **0.188 or 18.8%**.
+
+### Confusion matrix
+
+The confusion matrix can be calculated and shown as follows,
+
+```{r}
+table(OJ.test[,1],y2hatc,dnn = c("Response","Predictions"))
+```
+
+We can see the following from this confusion matrix,
+
+- There are 147 predictions where the CH sales match the predictions and 72 predictions where the MM sales match the predictions
+
+- There are 35 cases where the true sales are MM but the predictions say CH and there are 16 cases where the true sales are CH but the predictions say MM.
+
+## (e) Optimal tree size
+
+We can plot the cross-validated error rate for various Cp values.
+
+```{r,fig.height=4}
+plotcp(tree1)
+```
+
+This allows us to choose the optimal Cp value for the lowest cross-validated `xerror` rate. We take a $C_p = 0.01$ value. However, when we plot the pruned tree we observe,
+
+```{r,fig.height=4}
+tree1.pruned <- prune(tree1, cp=0.01)
+par(mfrow=c(1,2))
+prp(tree1, main="Default Tree")
+prp(tree1.pruned, main="Optimal-sized Tree")
+```
+
+We observe that **there is no difference between these trees i.e. the low $C_p$ value does not prune the tree at all**.
+
+## (f) Producing a pruned tree by choosing $C_p$ manually
+
+Next, we choose the $C_p$ manually, fit the model, and plot the corresponding trees,
+
+```{r}
+par(mfrow=c(2,2))
+tree1.pruned1 <- prune(tree1, cp=0.1)
+tree1.pruned2 <- prune(tree1, cp=0.025)
+tree1.pruned3 <- prune(tree1, cp=0.01)
+tree1.pruned4 <- prune(tree1, cp=0.005)
+prp(tree1.pruned1, main="Tree: Cp=0.1")
+prp(tree1.pruned2, main="Tree: Cp=0.025")
+prp(tree1.pruned3, main="Tree: Cp=0.01")
+prp(tree1.pruned4, main="Tree: Cp=0.005")
+```
+We observe that the $C_p=0.025$ produces a somewhat pruned tree with 5 terminal nodes instead of 7. Lowering the $C_p$ values further produces the default tree. A high value of $C_p=0.1$ produces a very simple tree which may underfit the data.
+
+Considering these, **we chose the $C_p=0.025$ for pruning.** This is just a personal choice at this point.
+
+## (g) Comparing the pruned and unpruned tree
+
+Next, we compare the performance of the default (unpruned) and the pruned tree.
+
+As expected, the default tree produces worst error rate on the test set but the **pruned rate handles the generalization well and, in fact, produces less error rate on the test set!** This is not usually seen but overall, it **demonstrates the usefulness of pruning a decision tree for regularization and making it more robust**.
+
+```{r,fig.height=5,fig.width=9}
+y1hatc <- predict(tree1, OJ.train[,-1],type="class")
+train.error1 <- sum(y1hatc!=as.factor(OJ.train[,1]))/length(OJ.train[,1])
+y2hatc <- predict(tree1, OJ.test[,-1],type="class")
+test.error1 <- sum(y2hatc!=as.factor(OJ.test[,1]))/length(OJ.test[,1])
+
+cat("Train error of unpruned tree: ", train.error1)
+cat("\n")
+cat("Test error of unpruned tree: ", test.error1)
+
+cat("\n---------------------------------------------\n")
+
+y1hatc <- predict(tree1.pruned2, OJ.train[,-1],type="class")
+train.error2 <- sum(y1hatc!=as.factor(OJ.train[,1]))/length(OJ.train[,1])
+y2hatc <- predict(tree1.pruned2, OJ.test[,-1],type="class")
+test.error2 <- sum(y2hatc!=as.factor(OJ.test[,1]))/length(OJ.test[,1])
+
+cat("Train error of pruned tree: ", train.error2)
+cat("\n")
+cat("Test error of pruned tree: ", test.error2)
+
+barplot(c(train.error1,test.error1,train.error2,test.error2),
+        main = "Test and train errors of the unprunned and prunned trees",
+        names.arg = c("Train error-unpruned","Test error-unpruned",
+                      "Train error-pruned","Test error-pruned"),
+        ylim = c(0.0,0.2),
+        col=c("blue","blue","green","green"))
+```
+
